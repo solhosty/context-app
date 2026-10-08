@@ -11,11 +11,10 @@ struct ContextApp: App {
     }
 
     init() {
-        let environment = ProcessInfo.processInfo.environment
-        if environment["CONTEXT_UI_TEST"] == "1" || environment["CONTEXT_RECORDING_MODE"] == "1" {
+        if ProcessInfo.processInfo.environment["CONTEXT_UI_TEST"] == "1" {
             DispatchQueue.main.async {
                 NSApp.setActivationPolicy(.regular)
-                ContextVerificationWindow.show(recordingMode: environment["CONTEXT_RECORDING_MODE"] == "1")
+                ContextVerificationWindow.show()
             }
         }
     }
@@ -40,23 +39,17 @@ struct ContextApp: App {
 private enum ContextVerificationWindow {
     private static var controller: NSWindowController?
 
-    static func show(recordingMode: Bool = false) {
+    static func show() {
         guard controller == nil else { return }
         let store = ContextStore()
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 390, height: 520),
-            styleMask: recordingMode ? [.borderless] : [.titled, .closable, .miniaturizable],
+            styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
         )
         window.title = "Context verification"
-        window.isMovableByWindowBackground = recordingMode
-        window.hasShadow = true
         window.contentView = NSHostingView(rootView: ContextMenu(store: store))
-        if recordingMode, let screen = NSScreen.main {
-            let frame = screen.visibleFrame
-            window.setFrameOrigin(NSPoint(x: frame.maxX - 410, y: frame.maxY - 540))
-        }
         let newController = NSWindowController(window: window)
         controller = newController
         newController.showWindow(nil)
@@ -134,11 +127,17 @@ final class ContextStore: ObservableObject {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        NSApp.activate(ignoringOtherApps: true)
-        panel.begin { [weak self, weak panel] response in
-            defer { self?.projectPicker = nil }
-            guard response == .OK, let url = panel?.url else { return }
-            self?.selectProject(url, source: "Manual selection")
+
+        // A MenuBarExtra button is still being tracked when its action runs.
+        // Present an app-modal panel on the next main-loop turn so its lifetime
+        // belongs to AppKit, rather than the transient menu-bar window.
+        DispatchQueue.main.async { [weak self, weak panel] in
+            guard let self, let panel, self.projectPicker === panel else { return }
+            NSApp.activate(ignoringOtherApps: true)
+            let response = panel.runModal()
+            self.projectPicker = nil
+            guard response == .OK, let url = panel.url else { return }
+            self.selectProject(url, source: "Manual selection")
         }
     }
 
