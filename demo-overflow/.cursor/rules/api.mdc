@@ -1,0 +1,6 @@
+---
+description: API fixture rule
+alwaysApply: false
+---
+
+Use stable response shapes.

@@ -1,0 +1,16 @@
+#!/bin/zsh
+set -euo pipefail
+
+root="${0:A:h:h}"
+cd "$root"
+swift build
+
+bundle="$root/dist/Context Verification.app"
+rm -rf "$bundle"
+mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
+cp "App/VerificationInfo.plist" "$bundle/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Add :LSEnvironment:CONTEXT_TEST_PROJECT string $root/demo-project/apps/api" "$bundle/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Add :LSEnvironment:CONTEXT_TEST_PROJECT_ROOT string $root/demo-project" "$bundle/Contents/Info.plist"
+cp ".build/debug/ContextApp" "$bundle/Contents/MacOS/ContextApp"
+codesign --force --sign - "$bundle"
+print "Built $bundle"

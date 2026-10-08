@@ -1,0 +1,14 @@
+#!/bin/zsh
+set -euo pipefail
+
+root="${0:A:h:h}"
+cd "$root"
+swift build -c release
+
+bundle="$root/dist/Context.app"
+rm -rf "$bundle"
+mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
+cp "App/Info.plist" "$bundle/Contents/Info.plist"
+cp ".build/release/ContextApp" "$bundle/Contents/MacOS/ContextApp"
+codesign --force --sign - "$bundle"
+printf 'Built %s\n' "$bundle"

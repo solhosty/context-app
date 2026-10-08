@@ -1,0 +1,29 @@
+#!/bin/zsh
+set -euo pipefail
+
+state_dir="$HOME/Library/Application Support/Context"
+state_file="$state_dir/active-project-path"
+
+case "${1:-use}" in
+  use)
+    project="$(pwd -P)"
+    mkdir -p "$state_dir"
+    printf '%s\n%s\n' "$project" "$(uuidgen)" > "$state_file"
+    printf 'Context is now inspecting %s\n' "$project"
+    ;;
+  clear)
+    rm -f "$state_file"
+    printf 'Context manual project selection cleared.\n'
+    ;;
+  path)
+    if [[ -f "$state_file" ]]; then
+      sed -n '1p' "$state_file"
+    else
+      printf 'No workspace has been published.\n'
+    fi
+    ;;
+  *)
+    printf 'Usage: context-project [use|clear|path]\n' >&2
+    exit 2
+    ;;
+esac
