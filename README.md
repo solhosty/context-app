@@ -47,7 +47,7 @@ Run the repeatable release gate before handoff:
 ./Scripts/verify-context
 ```
 
-It runs the Swift behavior tests, checks every cross-harness fixture, builds the production app, and verifies its signature. To also launch the packaged app and verify it remains alive outside the invoking shell:
+It runs the Swift behavior tests, builds the production app, and verifies its signature. To also launch the packaged app and verify it remains alive outside the invoking shell:
 
 ```sh
 CONTEXT_VERIFY_LAUNCH=1 ./Scripts/verify-context

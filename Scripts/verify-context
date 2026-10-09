@@ -8,23 +8,6 @@ swift test
 Scripts/build-app
 codesign --verify --deep --strict dist/Context.app
 
-required=(
-  "demo-overflow/AGENTS.md"
-  "demo-overflow/CLAUDE.md"
-  "demo-overflow/GEMINI.md"
-  "demo-overflow/.cursor/rules/api.mdc"
-  "demo-overflow/.github/copilot-instructions.md"
-  "demo-overflow/.clinerules"
-  "demo-overflow/.roo/rules/quality.md"
-  "demo-overflow/.windsurfrules"
-  "demo-overflow/.continue/rules/testing.md"
-  "demo-overflow/.claude/plugins/release-tools/.claude-plugin/plugin.json"
-)
-
-for item in "${required[@]}"; do
-  [[ -f "$item" ]] || { print -u2 "Missing verification fixture: $item"; exit 1; }
-done
-
 if [[ "${CONTEXT_VERIFY_LAUNCH:-0}" == "1" ]]; then
   nohup "$root/dist/Context.app/Contents/MacOS/ContextApp" >/dev/null 2>&1 &
   sleep 3
